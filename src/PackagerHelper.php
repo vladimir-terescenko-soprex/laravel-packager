@@ -17,6 +17,20 @@ use Illuminate\Filesystem\Filesystem;
 class PackagerHelper
 {
     /**
+     * Default folders
+     * @var array
+     */
+    protected $defaultFolders = [
+        'Controllers',
+        'Facades',
+        'Models',
+        'Repositories',
+        'config',
+        'database',
+        'resources',
+    ];
+
+    /**
      * The filesystem handler.
      * @var object
      */
@@ -184,5 +198,10 @@ class PackagerHelper
         @chmod($zipFile, 0777);
         @unlink($zipFile);
         return $this;
+    }
+
+    public function getDefaultFolders()
+    {
+        return $this->defaultFolders;
     }
 }

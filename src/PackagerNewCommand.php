@@ -53,7 +53,7 @@ class PackagerNewCommand extends Command
     public function handle()
     {
         // Start the progress bar
-        $bar = $this->helper->barSetup($this->output->createProgressBar(7));
+        $bar = $this->helper->barSetup($this->output->createProgressBar(8));
         $bar->start();
 
         // Common variables
@@ -135,7 +135,12 @@ class PackagerNewCommand extends Command
             }
         $bar->advance();
 
-        
+        // Create folder structure
+        $this->info('Creating folder structure...');
+        foreach($this->helper->getDefaultFolders() as $folder) {
+            $this->helper->makeDir($fullPath.'/src/'.$folder);
+        }
+        $bar->advance();
 
         // Add it to composer.json
         $this->info('Adding package to composer and app...');
