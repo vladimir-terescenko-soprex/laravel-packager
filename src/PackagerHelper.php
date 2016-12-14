@@ -210,22 +210,23 @@ class PackagerHelper
 
     /**
      * @param $folderPath
+     * @param null $subFolders
      */
-    public function createFolderStructure($folderPath)
+    public function createFolderStructure($folderPath, $subFolders = null)
     {
-//        dd($this->defaultFolders);
-        foreach($this->defaultFolders as $key => $folder) {
+        $foldersToLoop = $subFolders ? $subFolders : $this->defaultFolders;
+        foreach($foldersToLoop as $key => $folder) {
             if (is_numeric($key)) {
                 $this->makeDir($folderPath . $folder);
             } else {
                 $folderSubPath = $folderPath;
-                foreach($folder as $subFolder) {
-                    if (is_array($subFolder) && !is_numeric($subFolder[0])) {
-                        $this->createFolderStructure($folderSubPath);
+                foreach($folder as $subKey => $subFolder) {
+                    if (is_numeric($subKey)) {
+                        $folderSubPath .= $key . '/' . $subFolder;
+                        $this->makeDir($folderSubPath);
                     } else {
-                        $this->makeDir($key . '/' . $subFolder);
+                        $this->createFolderStructure($folderPath . '/'. $key .'/' . $subKey . '/', $subFolder);
                     }
-//                    $folderSubPath .= $key . '/' . $subFolder;
                 }
             }
         }
