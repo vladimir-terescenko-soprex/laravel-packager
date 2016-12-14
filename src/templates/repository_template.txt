@@ -1,0 +1,9 @@
+<?php
+
+namespace :repository_namespace:;
+
+class :package_name:Repository
+{
+
+
+}

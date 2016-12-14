@@ -26,9 +26,17 @@ class PackagerHelper
         'Models',
         'Repositories',
         'config',
-        'database',
-        'resources',
+        'database' => ['migrations'],
+        'resources' => [
+            'assets' => ['js', 'sass'],
+            'views' => ['elements'],
+        ],
     ];
+
+    /**
+     * @var string
+     */
+    protected $templatesPath = __DIR__ . '/templates/';
 
     /**
      * The filesystem handler.
@@ -200,8 +208,89 @@ class PackagerHelper
         return $this;
     }
 
-    public function getDefaultFolders()
+    /**
+     * @param $folderPath
+     */
+    public function createFolderStructure($folderPath)
     {
-        return $this->defaultFolders;
+//        dd($this->defaultFolders);
+        foreach($this->defaultFolders as $key => $folder) {
+            if (is_numeric($key)) {
+                $this->makeDir($folderPath . $folder);
+            } else {
+                $folderSubPath = $folderPath;
+                foreach($folder as $subFolder) {
+                    if (is_array($subFolder) && !is_numeric($subFolder[0])) {
+                        $this->createFolderStructure($folderSubPath);
+                    } else {
+                        $this->makeDir($key . '/' . $subFolder);
+                    }
+//                    $folderSubPath .= $key . '/' . $subFolder;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $path
+     * @param $packageName
+     * @param $nameSpace
+     * @return int
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function createResourceController($path, $packageName, $nameSpace)
+    {
+        $controllerTemplate = $this->files->get($this->templatesPath . 'resource_controller_template.txt');
+        $search = [':package_name:', ':controller_namespace:'];
+        $replace = [$packageName, $nameSpace];
+        $controllerTemplateChanged = str_replace($search, $replace, $controllerTemplate);
+
+        $this->files->put($path . '/' . $packageName . 'Controller.php', $controllerTemplateChanged);
+    }
+
+    /**
+     * @param $path
+     * @param $packageName
+     * @param $nameSpace
+     * @return int
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function createFacadeClass($path, $packageName, $nameSpace)
+    {
+        $facadeTemplate = $this->files->get($this->templatesPath . 'facade_template.txt');
+        $search = [':package_name:', ':facade_namespace:'];
+        $replace = [$packageName, $nameSpace];
+        $facadeTemplateChanged = str_replace($search, $replace, $facadeTemplate);
+
+        $this->files->put($path . '/' . $packageName . '.php', $facadeTemplateChanged);
+    }
+
+    /**
+     * @param $path
+     * @param $packageName
+     * @return int
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function createConfigFile($path, $packageName)
+    {
+        $configTemplate = $this->files->get($this->templatesPath . 'config_template.txt');
+
+        $this->files->put($path . '/' . strtolower($packageName) . '.php', $configTemplate);
+        $this->files->put($path . '/' . '.gitkeep', '');
+    }
+
+    public function createRepositoryClass($path, $packageName, $nameSpace)
+    {
+        $repositoryTemplate = $this->files->get($this->templatesPath . 'repository_template.txt');
+        $search = [':package_name:', ':repository_namespace:'];
+        $replace = [$packageName, $nameSpace];
+        $repositoryTemplateChanged = str_replace($search, $replace, $repositoryTemplate);
+
+        $this->files->put($path . '/' . $packageName . 'Repository.php', $repositoryTemplateChanged);
+    }
+
+    public function fillMigrationsDirectory($path)
+    {
+        return $this->files->put($path . '/migrations/' . '.gitkeep', '');
     }
 }
