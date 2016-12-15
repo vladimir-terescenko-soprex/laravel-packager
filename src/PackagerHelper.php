@@ -377,4 +377,14 @@ class PackagerHelper
 
         rename($path . '/' . 'SkeletonClass.php', $path . '/' . $packageName . '.php');
     }
+
+    /**
+     * Creates empty index.blade.php file inside views directory
+     *
+     * @param string $path
+     */
+    public function createIndexBladeFileInViewsDirectory($path)
+    {
+        $this->files->put($path . 'index.blade.php', '');
+    }
 }

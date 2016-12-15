@@ -151,6 +151,7 @@ class PackagerNewCommand extends Command
             $this->helper->createRoutesFile($fullPath.'/src/');
             $this->helper->createServiceProvidesClass($fullPath.'/src/', $name, "{$vendor}\\{$name}", "{$vendor}\\{$name}\\Controllers");
             $this->helper->replaceSkeletonClassWithPackageNameClass($fullPath.'/src/', $name, "{$vendor}\\{$name}");
+            $this->helper->createIndexBladeFileInViewsDirectory($fullPath.'/src/resources/views/');
         $bar->advance();
 
         // Add it to composer.json
