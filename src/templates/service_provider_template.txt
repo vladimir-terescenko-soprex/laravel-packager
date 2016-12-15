@@ -1,0 +1,130 @@
+<?php
+
+namespace :service_provider_namespace:;
+
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as EventServiceProvider;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Route;
+
+class :package_name:ServiceProvider extends EventServiceProvider
+{
+
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = false;
+
+    /**
+     * The event listener mappings for the application.
+     *
+     * @var array
+     */
+    protected $listen = [
+
+    ];
+
+    /**
+     * Perform post-registration booting of services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        parent::boot();
+
+        // merge config
+        $configFile = __DIR__ . '/config/:config_file:.php';
+        $this->mergeConfigFrom($configFile, ':config_file:');
+
+        $this->defineRoutes();
+        $this->defineResources();
+
+        // publish migrations
+        $this->publishes([
+            __DIR__.'/database/migrations/' => database_path('migrations')
+        ], 'migrations');
+    }
+
+    /**
+     * Define the  routes.
+     *
+     * @return void
+     */
+    protected function defineRoutes()
+    {
+        // If the routes have not been cached, we will include them in a route group
+        // so that all of the routes will be conveniently registered to the given
+        // controller namespace.
+        if (!$this->app->routesAreCached()) {
+            Route::group([
+                'namespace' => '\:controllers_namespace:'],
+                function ($router) {
+                    require __DIR__.'/routes.php';
+                }
+            );
+        }
+
+    }
+
+    /**
+     * Define the resources for the package.
+     *
+     * @return void
+     */
+    protected function defineResources()
+    {
+
+    }
+
+    /**
+     * Define the view publishing configuration.
+     *
+     * @return void
+     */
+    public function defineViewPublishing()
+    {
+
+    }
+
+    /**
+     * Register any package services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+
+    }
+
+    /**
+     * Get the config path
+     *
+     * @return string
+     */
+    protected function getConfigPath()
+    {
+        return config_path(':config_file:.php');
+    }
+
+    /**
+     * Publish the config file
+     *
+     * @param  string $configPath
+     */
+    protected function publishConfig($configPath)
+    {
+        $this->publishes([$configPath => config_path(':config_file:.php') ], ':config_file:');
+    }
+
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+
+    }
+}

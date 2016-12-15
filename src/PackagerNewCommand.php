@@ -148,6 +148,9 @@ class PackagerNewCommand extends Command
             $this->helper->createConfigFile($fullPath.'/src/config', $name);
             $this->helper->createRepositoryClass($fullPath.'/src/Repositories', $name, "{$vendor}\\{$name}\\Repositories");
             $this->helper->fillMigrationsDirectory($fullPath.'/src/database');
+            $this->helper->createRoutesFile($fullPath.'/src/');
+            $this->helper->createServiceProvidesClass($fullPath.'/src/', $name, "{$vendor}\\{$name}", "{$vendor}\\{$name}\\Controllers");
+            $this->helper->replaceSkeletonClassWithPackageNameClass($fullPath.'/src/', $name, "{$vendor}\\{$name}");
         $bar->advance();
 
         // Add it to composer.json

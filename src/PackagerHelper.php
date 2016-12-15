@@ -209,7 +209,9 @@ class PackagerHelper
     }
 
     /**
-     * @param $folderPath
+     * Creates folder structure that is set in $defaultFolders property
+     *
+     * @param string $folderPath
      * @param null $subFolders
      */
     public function createFolderStructure($folderPath, $subFolders = null)
@@ -233,9 +235,11 @@ class PackagerHelper
     }
 
     /**
-     * @param $path
-     * @param $packageName
-     * @param $nameSpace
+     * Creates resource controller file from resource_controller_template.txt file
+     *
+     * @param string $path
+     * @param string $packageName
+     * @param string $nameSpace
      * @return int
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -250,9 +254,11 @@ class PackagerHelper
     }
 
     /**
-     * @param $path
-     * @param $packageName
-     * @param $nameSpace
+     * Creates facade class file from facade_template.txt
+     *
+     * @param string $path
+     * @param string $packageName
+     * @param string $nameSpace
      * @return int
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -267,8 +273,10 @@ class PackagerHelper
     }
 
     /**
-     * @param $path
-     * @param $packageName
+     * Creates config file from config_template.txt
+     *
+     * @param string $path
+     * @param string $packageName
      * @return int
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -280,6 +288,14 @@ class PackagerHelper
         $this->files->put($path . '/' . '.gitkeep', '');
     }
 
+    /**
+     * Creates repository class form repository_template.txt
+     *
+     * @param string $path
+     * @param string $packageName
+     * @param string $nameSpace
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
     public function createRepositoryClass($path, $packageName, $nameSpace)
     {
         $repositoryTemplate = $this->files->get($this->templatesPath . 'repository_template.txt');
@@ -290,8 +306,75 @@ class PackagerHelper
         $this->files->put($path . '/' . $packageName . 'Repository.php', $repositoryTemplateChanged);
     }
 
+    /**
+     * Creating .gitkeep file inside migrations folder
+     *
+     * @param string $path
+     * @return int
+     */
     public function fillMigrationsDirectory($path)
     {
         return $this->files->put($path . '/migrations/' . '.gitkeep', '');
+    }
+
+    /**
+     * Creates empty routes file from routes_template.txt
+     *
+     * @param string $path
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function createRoutesFile($path)
+    {
+        $routesTemplate = $this->files->get($this->templatesPath . 'routes_template.txt');
+
+        $this->files->put($path . '/routes.php', $routesTemplate);
+    }
+
+    /**
+     * Creates service provider class from service_provider_template.txt
+     *
+     * @param string $path
+     * @param string $packageName
+     * @param string $nameSpace
+     * @param string $controllersNamespace
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function createServiceProvidesClass($path, $packageName, $nameSpace, $controllersNamespace)
+    {
+        $serviceProviderTemplate = $this->files->get($this->templatesPath . 'service_provider_template.txt');
+        $search = [
+            ':service_provider_namespace:',
+            ':package_name:',
+            ':config_file:',
+            ':controllers_namespace:'
+        ];
+        $replace = [
+            $nameSpace,
+            $packageName,
+            strtolower($packageName),
+            $controllersNamespace
+        ];
+        $serviceProviderTemplateChanged = str_replace($search, $replace, $serviceProviderTemplate);
+
+        $this->files->put($path . '/' . $packageName . 'ServiceProvider.php', $serviceProviderTemplateChanged);
+    }
+
+    /**
+     * Replaces default Skeleton class with package name class
+     *
+     * @param string $path
+     * @param string $packageName
+     * @param string $nameSpace
+     * @return bool
+     */
+    public function replaceSkeletonClassWithPackageNameClass($path, $packageName, $nameSpace)
+    {
+        $skeletonReplaceTemplate = $this->files->get($this->templatesPath . 'skeleton_replace_template.txt');
+        $search = [':namespace:', ':class_name:'];
+        $replace = [$nameSpace, $packageName];
+        $skeletonReplaceTemplateChanged = str_replace($search, $replace, $skeletonReplaceTemplate);
+        $this->files->put($path . '/' . 'SkeletonClass.php', $skeletonReplaceTemplateChanged);
+
+        rename($path . '/' . 'SkeletonClass.php', $path . '/' . $packageName . '.php');
     }
 }
