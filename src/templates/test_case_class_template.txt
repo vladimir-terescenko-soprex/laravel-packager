@@ -1,0 +1,45 @@
+<?php
+
+namespace :namespace:\Tests;
+
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Foundation\AliasLoader;
+
+class TestCase extends BaseTestCase
+{
+    /**
+     * @var string
+     */
+    protected $baseUrl = 'http://localhost';
+
+    /**
+     * Setup Laravel Application
+     * return mixed
+     */
+    public function createApplication()
+    {
+        $app = require __DIR__ . '/../vendor/laravel/laravel/bootstrap/app.php';
+        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        $app->register(\:namespace:\:package_name:ServiceProvider::class);
+
+        return $app;
+    }
+
+    /**
+     * Setup DB before each test.
+     *
+     * @return void
+     */
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->app['config']->set('database.default','sqlite');
+        $this->app['config']->set('database.connections.sqlite.database', ':memory:');
+
+        // publish all vendor files
+        $this->artisan('vendor:publish');
+        // run db migration
+        $this->artisan('migrate');
+    }
+}

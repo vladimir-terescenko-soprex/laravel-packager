@@ -39,6 +39,11 @@ class PackagerHelper
     protected $templatesPath = __DIR__ . '/templates/';
 
     /**
+     *
+     */
+    protected $filesPath = __DIR__ . '/files/';
+
+    /**
      * The filesystem handler.
      * @var object
      */
@@ -265,8 +270,8 @@ class PackagerHelper
     public function createFacadeClass($path, $packageName, $nameSpace)
     {
         $facadeTemplate = $this->files->get($this->templatesPath . 'facade_template.txt');
-        $search = [':package_name:', ':facade_namespace:'];
-        $replace = [$packageName, $nameSpace];
+        $search = [':package_name:', ':facade_namespace:', ':service_name:'];
+        $replace = [$packageName, $nameSpace, $this->convertPackageNameToServiceName($packageName)];
         $facadeTemplateChanged = str_replace($search, $replace, $facadeTemplate);
 
         $this->files->put($path . '/' . $packageName . '.php', $facadeTemplateChanged);
@@ -346,13 +351,15 @@ class PackagerHelper
             ':service_provider_namespace:',
             ':package_name:',
             ':config_file:',
-            ':controllers_namespace:'
+            ':controllers_namespace:',
+            ':service_name:',
         ];
         $replace = [
             $nameSpace,
             $packageName,
             strtolower($packageName),
-            $controllersNamespace
+            $controllersNamespace,
+            $this->convertPackageNameToServiceName($packageName),
         ];
         $serviceProviderTemplateChanged = str_replace($search, $replace, $serviceProviderTemplate);
 
@@ -387,4 +394,222 @@ class PackagerHelper
     {
         $this->files->put($path . 'index.blade.php', '');
     }
+
+    /**
+     * Creates tests folder in specified path
+     *
+     * @param string $path
+     */
+    public function createTestsFolder($path)
+    {
+        $this->makeDir($path . '/tests');
+    }
+
+    /**
+     * Creates TestCase.php Class in tests folder
+     *
+     * @param string $pathToTestsFolder
+     * @param string $namespace
+     * @param string $packageName
+     */
+    public function createTestCaseClassInTestsFolder($pathToTestsFolder, $namespace, $packageName)
+    {
+        $testCaseClassTemplate = $this->files->get($this->templatesPath . 'test_case_class_template.txt');
+        $search = [':namespace:', ':package_name:'];
+        $replace = [$namespace, $packageName];
+        $testCaseClassTemplateChanged = str_replace($search, $replace, $testCaseClassTemplate);
+
+        $this->files->put($pathToTestsFolder . '/TestCase.php', $testCaseClassTemplateChanged);
+    }
+
+    /**
+     * Creates phpunit.xml in package root directory
+     *
+     * @param string $path
+     */
+    public function createPhpUnitXmlFile($path)
+    {
+        copy($this->filesPath . 'phpunit.xml', $path . '/phpunit.xml');
+    }
+
+    /**
+     * Creates .gitkeep files inside empty folders
+     *
+     * @param string $folderPath
+     * @param null $subFolders
+     */
+    public function createGitKeepFilesInsideEmptyFolders($folderPath, $subFolders = null)
+    {
+        $foldersToLoop = $subFolders ? $subFolders : $this->defaultFolders;
+        foreach($foldersToLoop as $key => $folder) {
+            if (is_numeric($key)) {
+                if ($this->checkIfDirectoryIsEmpty($folderPath . $folder)) {
+                    $this->createGitKeepFile($folderPath . $folder);
+                }
+            } else {
+                $folderSubPath = $folderPath;
+                foreach($folder as $subKey => $subFolder) {
+                    if (is_numeric($subKey)) {
+                        $folderSubPath .= $key . '/' . $subFolder;
+                        if ($this->checkIfDirectoryIsEmpty($folderSubPath)) {
+                            $this->createGitKeepFile($folderSubPath);
+                        }
+                    } else {
+                        $this->createGitKeepFilesInsideEmptyFolders($folderPath . '/'. $key .'/' . $subKey . '/', $subFolder);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates .gitkeep file in specific path
+     *
+     * @param string $path
+     */
+    protected function createGitKeepFile($path)
+    {
+        $this->files->put($this->sanitizeDirPath($path) . '.gitkeep', '');
+    }
+
+    /**
+     * Creates .gitignore file in specific path with content from /files/.gitignore file
+     *
+     * @param string $path
+     */
+    public function createGitIgnoreFile($path)
+    {
+        copy($this->filesPath . '.gitignore', $path . '/.gitignore');
+    }
+
+    /**
+     * Creates .env.testing file in specific path with content from /files/.env.testing file
+     *
+     * @param string $path
+     */
+    public function createEnvTestingFile($path)
+    {
+        copy($this->filesPath . '.env.testing', $path . '/.env.testing');
+    }
+
+    /**
+     * Creates .gitlab-ci.yml file in specific path with from content from /files/.gitlab-ci.yml
+     *
+     * @param string $path
+     */
+    public function createGitLabCiYmlFile($path)
+    {
+        copy($this->filesPath . '.gitlab-ci.yml', $path . '/.gitlab-ci.yml');
+    }
+
+    /**
+     * Updates composer.json with proper data
+     *
+     * @param string $pathToFile
+     * @param string $namespace
+     */
+    public function updateComposerJsonFile($pathToFile, $namespace)
+    {
+        $authors = [
+            'name' => 'Reww Techteam',
+            'email' => 'techadmin@reww.com',
+            'homepage' => 'http://reww.com',
+            'role' => 'Developer',
+        ];
+
+        $require = [
+            'php' => '~5.6|~7.0',
+        ];
+
+        $requireDev = [
+            'laravel/laravel' => '5.3.*',
+            'phpunit/phpunit' => "~5",
+            'phpunit/php-code-coverage' => '^4',
+            'squizlabs/php_codesniffer' => '~2.3',
+            'phpmd/phpmd' => '^2.4',
+            'phpunit/phpcov' => '*',
+            'mockery/mockery' =>  '*',
+            'fzaninotto/faker' => '^1.6',
+            'symfony/css-selector' => '3.1.*',
+            'symfony/dom-crawler' => '3.1.*',
+            'barryvdh/laravel-ide-helper' => '^2.2',
+            'doctrine/dbal' => '^2.5',
+        ];
+
+        $autoLoadDev = [$namespace . '\\Tests\\' => 'tests'];
+
+        $file = file_get_contents($pathToFile);
+        $composerJson = json_decode($file, true);
+        $composerJson['description'] = 'Package description';
+        $composerJson['license'] = 'Proprietary';
+        $composerJson['authors'] = $authors;
+        $composerJson['require-dev'] = $requireDev;
+        $composerJson['require'] = $require;
+        $composerJson['homepage'] = '';
+        $composerJson['autoload-dev']['psr-4'] = $autoLoadDev;
+
+        $composerJson = json_encode($composerJson, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+
+        $this->files->put($pathToFile, $composerJson);
+    }
+
+    /**
+     * Removes unnecessary files from the package
+     * @param string $path
+     */
+    public function removeUnnecessaryFiles($path)
+    {
+        $unnecessaryFiles = [
+            'CONDUCT.md',
+            'CONTRIBUTING.md',
+            'ISSUE_TEMPLATE.md',
+            'LICENSE.md',
+            'prefill.php',
+            'PULL_REQUEST_TEMPLATE.md',
+        ];
+
+        foreach($unnecessaryFiles as $file) {
+            $unnecessaryFiles[] = $path . '/' . $file;
+        }
+
+        $this->files->delete($unnecessaryFiles);
+    }
+
+    /**
+     * Checks if directory path ends with '/' if not, appends it to end of the path
+     *
+     * @param string $path
+     * @return string
+     */
+    protected function sanitizeDirPath($path)
+    {
+        return substr($path, -1) === '/' ? $path : $path . '/';
+    }
+
+    /**
+     * Checks if directory is empty
+     *
+     * @param $directoryPath
+     * @return bool
+     */
+    protected function checkIfDirectoryIsEmpty($directoryPath)
+    {
+        if (count(scandir($directoryPath)) == 2) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Converts package name to service name
+     *
+     * @param string $packageName
+     * @return string
+     */
+    protected function convertPackageNameToServiceName($packageName)
+    {
+        return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '.$0', $packageName)), '.');
+    }
+
 }

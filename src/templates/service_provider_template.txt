@@ -75,7 +75,7 @@ class :package_name:ServiceProvider extends EventServiceProvider
      */
     protected function defineResources()
     {
-
+        $this->loadViewsFrom(__DIR__.'/resources/views', ':config_file:');
     }
 
     /**
@@ -95,7 +95,9 @@ class :package_name:ServiceProvider extends EventServiceProvider
      */
     public function register()
     {
-
+        $this->app->singleton(':service_name:', function () {
+            return new :package_name:;
+        });
     }
 
     /**
@@ -125,6 +127,8 @@ class :package_name:ServiceProvider extends EventServiceProvider
      */
     public function provides()
     {
-
+        return [
+            :package_name:::class,
+        ];
     }
 }

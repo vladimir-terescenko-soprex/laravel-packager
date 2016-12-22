@@ -11,6 +11,6 @@ class :package_name: extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        //
+        return ':service_name:';
     }
 }

@@ -1,0 +1,37 @@
+
+# Select what we should cache
+cache:
+  paths:
+    - vendor/
+
+before_script:
+  # Install git, the php image doesn't have installed
+  - apt-get update -yqq
+  - apt-get install git -yqq
+  - pecl install xdebug
+  - docker-php-ext-enable xdebug
+
+  # ssh to get other gitlab repo
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - mkdir -p ~/.ssh
+  - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+  - ssh-keyscan -t rsa gitlab.com >> ~/.ssh/known_hosts
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+  # Install mysql driver
+  - docker-php-ext-install pdo_mysql
+
+  # Install composer
+  - curl -sS https://getcomposer.org/installer | php
+
+  # Install all project dependencies
+  - php composer.phar install
+
+#services:
+#  - mysql
+
+phpunit:php7.0:
+  image: php:7.0
+  script:
+    - php vendor/bin/phpunit --coverage-text --colors=never

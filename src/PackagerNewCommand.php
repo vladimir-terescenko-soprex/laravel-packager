@@ -53,7 +53,7 @@ class PackagerNewCommand extends Command
     public function handle()
     {
         // Start the progress bar
-        $bar = $this->helper->barSetup($this->output->createProgressBar(9));
+        $bar = $this->helper->barSetup($this->output->createProgressBar(10));
         $bar->start();
 
         // Common variables
@@ -152,6 +152,12 @@ class PackagerNewCommand extends Command
             $this->helper->createServiceProvidesClass($fullPath.'/src/', $name, "{$vendor}\\{$name}", "{$vendor}\\{$name}\\Controllers");
             $this->helper->replaceSkeletonClassWithPackageNameClass($fullPath.'/src/', $name, "{$vendor}\\{$name}");
             $this->helper->createIndexBladeFileInViewsDirectory($fullPath.'/src/resources/views/');
+            $this->helper->createTestsFolder($fullPath);
+            $this->helper->createTestCaseClassInTestsFolder($fullPath.'/tests', "{$vendor}\\{$name}", $name);
+            $this->helper->createPhpUnitXmlFile($fullPath);
+            $this->helper->createGitLabCiYmlFile($fullPath);
+            $this->helper->createGitIgnoreFile($fullPath);
+            $this->helper->createEnvTestingFile($fullPath);
         $bar->advance();
 
         // Add it to composer.json
@@ -159,6 +165,13 @@ class PackagerNewCommand extends Command
             $this->helper->replaceAndSave(getcwd().'/composer.json', '"psr-4": {', $requirement);
             // And add it to the providers array in config/app.php
             $this->helper->replaceAndSave(getcwd().'/config/app.php', 'App\Providers\RouteServiceProvider::class,', $appConfigLine);
+        $bar->advance();
+
+        // Finishing touches...
+        $this->info('Cleaning up...');
+            $this->helper->updateComposerJsonFile($fullPath.'/composer.json', "{$vendor}\\{$name}");
+            $this->helper->createGitKeepFilesInsideEmptyFolders($fullPath.'/src/');
+            $this->helper->removeUnnecessaryFiles($fullPath);
         $bar->advance();
 
         // Finished creating the package, end of the progress bar
