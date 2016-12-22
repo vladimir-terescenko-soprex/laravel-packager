@@ -511,10 +511,12 @@ class PackagerHelper
     public function updateComposerJsonFile($pathToFile, $namespace)
     {
         $authors = [
-            'name' => 'Reww Techteam',
-            'email' => 'techadmin@reww.com',
-            'homepage' => 'http://reww.com',
-            'role' => 'Developer',
+            [
+                'name' => 'Reww Techteam',
+                'email' => 'techadmin@reww.com',
+                'homepage' => 'http://reww.com',
+                'role' => 'Developer',
+            ],
         ];
 
         $require = [
@@ -540,12 +542,12 @@ class PackagerHelper
 
         $file = file_get_contents($pathToFile);
         $composerJson = json_decode($file, true);
+        unset($composerJson['homepage']);
         $composerJson['description'] = 'Package description';
         $composerJson['license'] = 'Proprietary';
         $composerJson['authors'] = $authors;
         $composerJson['require-dev'] = $requireDev;
         $composerJson['require'] = $require;
-        $composerJson['homepage'] = '';
         $composerJson['autoload-dev']['psr-4'] = $autoLoadDev;
 
         $composerJson = json_encode($composerJson, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
